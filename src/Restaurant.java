@@ -4,6 +4,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.border.LineBorder;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.Document;
+
 import java.awt.Color;
 import javax.swing.JLabel;
 import java.awt.Font;
@@ -18,6 +21,7 @@ import javax.swing.JButton;
 import java.awt.GridLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import javax.swing.JTextPane;
 
 public class Restaurant {
 
@@ -59,6 +63,7 @@ public class Restaurant {
 	 */
 	private void initialize() {
 		frame = new JFrame();
+		frame.setResizable(false);
 		frame.setBounds(0, 0, 1280, 720);
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		frame.getContentPane().setLayout(null);
@@ -75,6 +80,12 @@ public class Restaurant {
 		
 		JPanel pnlReceipt = new JPanel();
 		tabbedPane.addTab("Receipt", null, pnlReceipt, null);
+		pnlReceipt.setLayout(null);
+		
+		JTextPane txtReceipt = new JTextPane();
+		txtReceipt.setFont(new Font("Lucida Grande", Font.PLAIN, 10));
+		txtReceipt.setBounds(6, 6, 239, 421);
+		pnlReceipt.add(txtReceipt);
 		
 		JPanel pnlCalculator = new JPanel();
 		tabbedPane.addTab("Calculator", null, pnlCalculator, null);
@@ -552,17 +563,16 @@ public class Restaurant {
 				lblDrinkAmt.setText(String.format("%.2f", drinkAmt));
 				
 				subTotalAmt = mealAmt + drinkAmt;
-//				System.out.println((numChkBurger * ChkBurgerCost));
-				lblSubTotalAmt.setText(String.format("%.2f", subTotalAmt));
+				lblSubTotalAmt.setText(String.format("%.2f", subTotalAmt));				
 				
-				if (chckbxTax.isSelected()){
-					lblTaxAmt.setText(String.format("%.2f", (subTotalAmt * 0.06)));
-					frame.revalidate();
-					frame.repaint();
-				} else {
+				if (!chckbxTax.isSelected()){
 					lblTaxAmt.setText("0.00");
 					frame.revalidate();
-					frame.repaint();
+					frame.repaint();	
+				} else {
+					lblTaxAmt.setText(String.format("%.2f", subTotalAmt * 0.06));
+					frame.revalidate();
+					frame.repaint();		
 				}
 				
 				if (chckbxHomeDelivery.isSelected()){
@@ -573,7 +583,9 @@ public class Restaurant {
 					lblDeliveryAmt.setText(String.format("%.2f", 0.00));
 				}
 				
-				lblTotalAmt.setText(String.format("%.2f", Double.parseDouble(lblSubTotalAmt.getText()) + Double.parseDouble(lblTaxAmt.getText())));
+				lblTotalAmt.setText(String.format("%.2f", Double.parseDouble(lblSubTotalAmt.getText()) + Double.parseDouble(lblTaxAmt.getText())
+						+ Double.parseDouble(lblDeliveryAmt.getText())
+						));
 			}
 		});
 		btnTotal.setBounds(167, 11, 117, 42);
@@ -611,8 +623,49 @@ public class Restaurant {
 		pnlConverter.add(btnClearCurrency);
 		
 		JButton btnReceipt = new JButton("Receipt");
+		btnReceipt.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				
+				txtReceipt.setText("");
+				
+				btnTotal.doClick();
+				
+				attachString("\t\nWelcome to McBurger Queen:\n\n"
+						+ "\n" + Integer.parseInt(txtChickenBurgerAmt.getText()) + " Chicken Burger(s) @ " + "$ 0.89 = $ " + (Double.parseDouble(txtChickenBurgerAmt.getText()) * 0.89)
+						+ "\n" + Integer.parseInt(txtChickenBurgerMealAmt.getText()) + " Chicken Burger Meal(s) @ " + "$ 1.99 = $ " + (Double.parseDouble(txtChickenBurgerMealAmt.getText()) * 1.99)
+						+ "\n" + Integer.parseInt(txtCheeseBurgerAmt.getText()) + " Cheese Burger(s) @ " + "$ 1.19 = $ " + (Double.parseDouble(txtCheeseBurgerAmt.getText()) * 1.19)
+						+ "\n" + Integer.parseInt(txtCheeseBurgerMealAmt.getText()) + " Cheese Burger Meal(s) @ " + "$ 2.29 = $ " + (Double.parseDouble(txtCheeseBurgerMealAmt.getText()) * 2.29)
+						+ "\n" + Integer.parseInt(txtDrinksAmt.getText()) + " Drink(s) @ " + "$ 0.99 = $ " + String.format("%.2f", Double.parseDouble(txtDrinksAmt.getText()) * 0.99)
+						+ "\n\nSub Total\t\t = $ " + lblSubTotalAmt.getText()
+				);		
+				
+				if (chckbxTax.isSelected()) {
+					attachString("\nTax @ 6%\t\t = $ " + lblTaxAmt.getText());				
+				}				
+				
+				if (chckbxHomeDelivery.isSelected()){
+					attachString("\nHome Delivery @ $ 5.00\t = $ 5.00");
+				}
+				
+				attachString("\n\nTotal\t\t = $ " + lblTotalAmt.getText());
+				
+			}
+					
+
+			private void attachString(String text) {
+			   try {
+				      Document doc = txtReceipt.getDocument();
+				      doc.insertString(doc.getLength(), text, null);
+				   } catch(BadLocationException exc) {
+				      exc.printStackTrace();
+				   }
+				
+			}
+		});
 		btnReceipt.setBounds(442, 11, 117, 42);
 		pnlNav.add(btnReceipt);
+		
+	
 		
 		JButton btnReset = new JButton("Reset");
 		btnReset.addActionListener(new ActionListener() {
@@ -634,6 +687,7 @@ public class Restaurant {
 				lblTaxAmt.setText("0.06");
 				lblSubTotalAmt.setText("0.00");
 				lblTotalAmt.setText("0.00");
+				txtReceipt.setText("");
 			}
 		});
 		btnReset.setBounds(717, 11, 117, 42);
